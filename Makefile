@@ -3,7 +3,7 @@ test-app:
 	@docker compose -f ./deploy/docker-compose.test.yml down
 
 build-app:
-	docker build -t fetch-system-worker:latest -f ./deploy/Dockerfile .
+	docker build -t fetch-system/worker:latest -f ./deploy/Dockerfile .
 
 generate-wire:
 	wire cmd/wire/wire_setup.go

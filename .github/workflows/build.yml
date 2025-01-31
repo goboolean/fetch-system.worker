@@ -7,60 +7,41 @@ on:
       - main
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Decrypt environment variables
-        run: |
-          echo "${{ secrets.ENV }}" > deploy/.env
-
-      - name: Run tests
-        run: |
-          make test-app
-
   build:
-    needs: test
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Decrypt environment variables
-        run: |
-          echo "${{ secrets.ENV }}" base64 -d > .env
 
       - name: Build an app
         run: |
           make build-app
 
-      - name: Set up Docker daemon to using HTTP
-        run: |
-          sudo mkdir -p /etc/docker
-          echo '{"insecure-registries":["${{ secrets.HARBOR_REGISTRY }}"]}' | sudo tee /etc/docker/daemon.json
-          sudo systemctl restart docker
-
-      - name: Login to Harbor
+      - name: Login to registry
         uses: docker/login-action@v2
         with:
-          registry: ${{ secrets.HARBOR_REGISTRY }}
-          username: ${{ secrets.HARBOR_USERNAME }}
-          password: ${{ secrets.HARBOR_PASSWORD }}
-        
-      - name: Push Docker image to Harbor
+          registry: registry.goboolean.io
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Push docker image to registry
         run: |
-          docker tag fetch-system-worker:latest ${{ secrets.HARBOR_REGISTRY }}/fetch-system/fetch-system-worker:${{ github.sha }}
-          docker push ${{ secrets.HARBOR_REGISTRY }}/fetch-system/fetch-system-worker:${{ github.sha }}
+          docker tag fetch-system/worker:latest registry.goboolean.io/fetch-system/worker:${GITHUB_SHA::7}
+          docker push registry.goboolean.io/fetch-system/worker:${GITHUB_SHA::7}
 
   kustomize:
     runs-on: ubuntu-latest
     needs: build
-
-    # Kustomize repository update workflow
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Extract image tag
+        run: echo "SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_ENV
+
+      - name: Update image tag
+        uses: goboolean/manifests/.github/actions/update-image-tag@main
+        with:
+          app-name: ${{ github.event.repository.name }}
+          image-tag: ${{ env.SHORT_SHA }}
+          github-token: ${{ secrets.GOBOOLEAN_IO_TOKEN }}
+          profile: dev
+          pull-request-link: ${{ github.event.pull_request.html_url }}
