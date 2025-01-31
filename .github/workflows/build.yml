@@ -14,10 +14,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Decrypt environment variables
-        run: |
-          echo "${{ secrets.ENV }}" > deploy/.env
-
       - name: Run tests
         run: |
           make test-app
@@ -29,10 +25,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Decrypt environment variables
-        run: |
-          echo "${{ secrets.ENV }}" base64 -d > .env
 
       - name: Build an app
         run: |
