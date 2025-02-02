@@ -41,6 +41,7 @@ jobs:
         uses: goboolean/manifests/.github/actions/update-image-tag@main
         with:
           app-name: ${{ github.event.repository.name }}
+          image-name: registry.goboolean.io/fetch-system/worker
           image-tag: ${{ env.SHORT_SHA }}
           github-token: ${{ secrets.GOBOOLEAN_IO_TOKEN }}
           profile: dev
