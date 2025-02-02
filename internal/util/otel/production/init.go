@@ -9,8 +9,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-
-
 func init() {
 	var err error
 
@@ -23,8 +21,6 @@ func init() {
 
 	log.Info("OpenTelemetry is ready")
 }
-
-
 
 var close func(context.Context) error
 
