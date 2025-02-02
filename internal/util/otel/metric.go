@@ -6,13 +6,11 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-
-
 var (
 	KafkaProducerSuccessCount metric.Int64Counter
 	KafkaProducerErrorCount   metric.Int64Counter
 	ETCDErrorCount            metric.Int64Counter
-	MockGeneratorCount		  metric.Int64Counter
+	MockGeneratorCount        metric.Int64Counter
 	PolygonStockErrorCount    metric.Int64Counter
 	PolygonStockReceivedCount metric.Int64Counter
 	KISStockErrorCount        metric.Int64Counter
@@ -21,14 +19,12 @@ var (
 	ProductReceivedCount      metric.Int64Counter
 )
 
-
-
 func initMetric(meter metric.Meter) (err error) {
 	KafkaProducerSuccessCount, err = meter.Int64Counter("kafka.producer.success.count")
 	if err != nil {
 		return
 	}
-	KafkaProducerErrorCount.Add(context.Background(), 0)
+	KafkaProducerSuccessCount.Add(context.Background(), 0)
 
 	KafkaProducerErrorCount, err = meter.Int64Counter("kafka.producer.error.count")
 	if err != nil {
@@ -65,7 +61,7 @@ func initMetric(meter metric.Meter) (err error) {
 		return
 	}
 	KISStockErrorCount.Add(context.Background(), 0)
-	
+
 	KISStockReceivedCount, err = meter.Int64Counter("kis.stock.received.count")
 	if err != nil {
 		return
