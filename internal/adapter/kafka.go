@@ -8,8 +8,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-
-
 type KafkaAdapter struct {
 	p *kafka.Producer
 	w *vo.Worker
@@ -30,7 +28,12 @@ func (a *KafkaAdapter) OutputStream(ch <-chan *vo.Trade) error {
 				Size:      trade.Size,
 				Timestamp: trade.Timestamp.Unix(),
 			}
-			if err := a.p.ProduceJsonTrade(trade.ID, data); err != nil {
+			logrus.WithFields(logrus.Fields{
+				"id":     trade.ID,
+				"symbol": trade.Symbol,
+				"data":   data,
+			}).Info("Producing trade")
+			if err := a.p.ProduceJsonTrade(trade.Symbol, data); err != nil {
 				logrus.WithFields(logrus.Fields{
 					"error": err,
 					"id":    trade.ID,
@@ -38,13 +41,13 @@ func (a *KafkaAdapter) OutputStream(ch <-chan *vo.Trade) error {
 				}).Panic("Failed to produce trade")
 			}
 			/*
-			if err := a.p.ProduceProtobufTrade(trade.ID, string(a.w.Platform), string(a.w.Market), data); err != nil {
-				logrus.WithFields(logrus.Fields{
-					"error": err,
-					"id":    trade.ID,
-					"data":  data,
-				}).Panic("Failed to produce trade")
-			}
+				if err := a.p.ProduceProtobufTrade(trade.ID, string(a.w.Platform), string(a.w.Market), data); err != nil {
+					logrus.WithFields(logrus.Fields{
+						"error": err,
+						"id":    trade.ID,
+						"data":  data,
+					}).Panic("Failed to produce trade")
+				}
 			*/
 		}
 	}()
