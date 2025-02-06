@@ -24,11 +24,6 @@ type Producer struct {
 	cancel context.CancelFunc
 }
 
-// example:
-//
-//	p, err := NewProducer(&resolver.ConfigMap{
-//	  "BOOTSTRAP_HOST": os.Getenv("KAFKA_BOOTSTRAP_HOST"),
-//	})
 func NewProducer(c *resolver.ConfigMap) (*Producer, error) {
 
 	bootstrap_host, err := c.GetStringKey("BOOTSTRAP_HOST")
@@ -63,7 +58,7 @@ func (p *Producer) produceProtobufData(topic string, key string, value proto.Mes
 
 	if err = p.producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &topic},
-		Key: 		  []byte(key),
+		Key:            []byte(key),
 		Value:          payload,
 	}, nil); err != nil {
 		return err
@@ -81,7 +76,6 @@ func (p *Producer) ProduceProtobufAggs(productId string, productType string, pla
 	return p.produceProtobufData(topic, productId, data)
 }
 
-
 func (p *Producer) produceJsonData(topic string, key int64, value interface{}) error {
 	payload, err := json.Marshal(value)
 	if err != nil {
@@ -93,7 +87,7 @@ func (p *Producer) produceJsonData(topic string, key int64, value interface{}) e
 
 	if err = p.producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &topic},
-		Key: 		  	bs,
+		Key:            bs,
 		Value:          payload,
 	}, nil); err != nil {
 		return err
@@ -111,9 +105,6 @@ func (p *Producer) ProduceJsonAggs(productId string, productType string, data *m
 	return p.produceJsonData(topic, data.Timestamp, data)
 }
 
-
-
-
 func (p *Producer) Flush(ctx context.Context) (int, error) {
 
 	deadline, ok := ctx.Deadline()
@@ -129,15 +120,13 @@ func (p *Producer) Flush(ctx context.Context) (int, error) {
 	return 0, nil
 }
 
-
-
 func (p *Producer) traceEvent(ctx context.Context, wg *sync.WaitGroup) {
 
 	go func() {
 		wg.Add(1)
 		defer wg.Done()
 
-		for e :=  range p.producer.Events() {
+		for e := range p.producer.Events() {
 			switch ev := e.(type) {
 			case *kafka.Message:
 				if ev.TopicPartition.Error != nil {
@@ -145,6 +134,10 @@ func (p *Producer) traceEvent(ctx context.Context, wg *sync.WaitGroup) {
 						Error("Failed to produce message")
 					otel.KafkaProducerErrorCount.Add(ctx, 1)
 				} else {
+					log.WithField("topic", *ev.TopicPartition.Topic).
+						WithField("partition", ev.TopicPartition.Partition).
+						WithField("offset", ev.TopicPartition.Offset).
+						Info("Produced message")
 					otel.KafkaProducerSuccessCount.Add(ctx, 1)
 				}
 			case *kafka.Error:
@@ -155,8 +148,6 @@ func (p *Producer) traceEvent(ctx context.Context, wg *sync.WaitGroup) {
 		}
 	}()
 }
-
-
 
 func (p *Producer) Close() {
 	p.producer.Close()
