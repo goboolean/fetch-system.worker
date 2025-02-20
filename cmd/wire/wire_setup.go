@@ -19,19 +19,17 @@ import (
 	"github.com/Goboolean/fetch-system.worker/internal/infrastructure/kis"
 	"github.com/Goboolean/fetch-system.worker/internal/infrastructure/mock"
 	"github.com/Goboolean/fetch-system.worker/internal/infrastructure/polygon"
+	"github.com/google/uuid"
 	"github.com/google/wire"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
-
-
 
 func ProvideOtelConfig() *resolver.ConfigMap {
 	return &resolver.ConfigMap{
 		"OTEL_ENDPOINT": os.Getenv("OTEL_ENDPOINT"),
 	}
 }
-
 
 func ProvideKafkaConfig() *resolver.ConfigMap {
 	return &resolver.ConfigMap{
@@ -50,19 +48,18 @@ func ProvideMockGeneratorConfig() *resolver.ConfigMap {
 	}
 }
 
-
 func ProvideKISConfig() *resolver.ConfigMap {
 	return &resolver.ConfigMap{
-		"APPKEY": os.Getenv("KIS_APPKEY"),
-		"SECRET": os.Getenv("KIS_SECRET"),
-		"MODE":   os.Getenv("MODE"),
+		"APPKEY":      os.Getenv("KIS_APPKEY"),
+		"SECRET":      os.Getenv("KIS_SECRET"),
+		"MODE":        os.Getenv("MODE"),
 		"BUFFER_SIZE": 100000,
 	}
 }
 
 func ProvidePolygonConfig() *resolver.ConfigMap {
 	return &resolver.ConfigMap{
-		"SECRET_KEY": os.Getenv("POLYGON_SECRET_KEY"),
+		"SECRET_KEY":  os.Getenv("POLYGON_SECRET_KEY"),
 		"BUFFER_SIZE": 100000,
 	}
 }
@@ -75,28 +72,26 @@ func ProvideETCDConfig() *resolver.ConfigMap {
 
 func ProvideWorkerConfig() *vo.Worker {
 	return &vo.Worker{
-		ID: os.Getenv("WORKER_ID"),
+		ID:       uuid.New().String(),
 		Platform: vo.Platform(os.Getenv("PLATFORM")),
-		Market: vo.Market(os.Getenv("MARKET")),
+		Market:   vo.Market(os.Getenv("MARKET")),
 	}
 }
 
-
-
 func ProvideKafkaProducer(ctx context.Context, c *resolver.ConfigMap) (*kafka.Producer, func(), error) {
-    producer, err := kafka.NewProducer(c)
-    if err != nil {
-        return nil, nil, errors.Wrap(err, "Failed to create kafka producer")
-    }
+	producer, err := kafka.NewProducer(c)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "Failed to create kafka producer")
+	}
 	if err := producer.Ping(ctx); err != nil {
 		return nil, nil, errors.Wrap(err, "Failed to send ping to kafka producer")
 	}
 	log.Info("Kafka producer is ready")
 
 	return producer, func() {
-        producer.Close()
+		producer.Close()
 		log.Info("Kafka producer is successfully closed")
-    }, nil
+	}, nil
 }
 
 func ProvideETCDClient(ctx context.Context, c *resolver.ConfigMap) (*etcd.Client, func(), error) {
@@ -191,8 +186,6 @@ func ProvideMockGenerator(c *resolver.ConfigMap) (*mock.Client, func(), error) {
 	}, nil
 }
 
-
-
 func InitializeKafkaProducer(ctx context.Context) (out.DataDispatcher, func(), error) {
 	wire.Build(
 		ProvideKafkaConfig,
@@ -207,7 +200,7 @@ func InitializeETCDClient(ctx context.Context) (out.StorageHandler, func(), erro
 	wire.Build(
 		ProvideETCDConfig,
 		ProvideETCDClient,
-		adapter.NewETCDAdapter,		
+		adapter.NewETCDAdapter,
 	)
 	return nil, nil, nil
 }
@@ -257,28 +250,26 @@ func InitializeMockGenerator(ctx context.Context) (out.DataFetcher, func(), erro
 	return nil, nil, nil
 }
 
-
-
 func InitializeFetcher(ctx context.Context) (out.DataFetcher, func(), error) {
 	switch os.Getenv("PLATFORM") {
 	case "POLYGON":
 		switch os.Getenv("MARKET") {
-			case "STOCK":
-				return InitializePolygonStockClient(ctx)
-			case "OPTION":
-				return InitializePolygonOptionClient(ctx)
-			case "CRYPTO":
-				return InitializePolygonCryptoClient(ctx)
-			default:
-				return nil, nil, fmt.Errorf("invalid market: %s", os.Getenv("MARKET"))
-			}
+		case "STOCK":
+			return InitializePolygonStockClient(ctx)
+		case "OPTION":
+			return InitializePolygonOptionClient(ctx)
+		case "CRYPTO":
+			return InitializePolygonCryptoClient(ctx)
+		default:
+			return nil, nil, fmt.Errorf("invalid market: %s", os.Getenv("MARKET"))
+		}
 	case "KIS":
 		switch os.Getenv("MARKET") {
-			case "STOCK":
-				return InitializeKISStockClient(ctx)
-			default:
-				return nil, nil, fmt.Errorf("invalid market: %s", os.Getenv("MARKET"))
-			}
+		case "STOCK":
+			return InitializeKISStockClient(ctx)
+		default:
+			return nil, nil, fmt.Errorf("invalid market: %s", os.Getenv("MARKET"))
+		}
 	case "MOCK":
 		return InitializeMockGenerator(ctx)
 	default:
