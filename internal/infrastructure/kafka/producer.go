@@ -32,9 +32,14 @@ func NewProducer(c *resolver.ConfigMap) (*Producer, error) {
 	}
 
 	p, err := kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers":   bootstrap_host,
-		"acks":                -1,
-		"go.delivery.reports": true,
+		"bootstrap.servers":            bootstrap_host,
+		"acks":                         -1,
+		"go.delivery.reports":          true,
+		"queue.buffering.max.ms":       10,
+		"queue.buffering.max.messages": 100000,
+		"queue.buffering.max.bytes":    1048576,
+		"linger.ms":                    10,
+		"num.network.threads":          10,
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -96,7 +101,7 @@ func (p *Producer) produceJsonData(topic string, key int64, value interface{}) e
 }
 
 func (p *Producer) ProduceJsonTrade(productId string, data *model.TradeJson) error {
-	topic := fmt.Sprintf("%s.t", productId)
+	topic := fmt.Sprintf("stock.%s.t", productId)
 	return p.produceJsonData(topic, data.Timestamp, data)
 }
 

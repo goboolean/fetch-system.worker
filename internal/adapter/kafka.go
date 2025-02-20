@@ -38,7 +38,7 @@ func (a *KafkaAdapter) OutputStream(ch <-chan *vo.Trade) error {
 					"error": err,
 					"id":    trade.ID,
 					"data":  data,
-				}).Panic("Failed to produce trade")
+				}).Error("Failed to produce trade")
 			}
 			/*
 				if err := a.p.ProduceProtobufTrade(trade.ID, string(a.w.Platform), string(a.w.Market), data); err != nil {
