@@ -35,12 +35,16 @@ func NewProducer(c *resolver.ConfigMap) (*Producer, error) {
 		"bootstrap.servers":            bootstrap_host,
 		"acks":                         -1,
 		"go.delivery.reports":          true,
-		"queue.buffering.max.ms":       10,
-		"queue.buffering.max.messages": 100000,
-		"queue.buffering.max.bytes":    1048576,
-		"linger.ms":                    10,
-		"num.network.threads":          10,
+		"batch.num.messages":           10000,      // By default, a batch can buffer up to 10,000 messages to form a MessageSet for batch sending, enhancing performance.
+		"batch.size":                   1000000,    //The limit for the total size of a MessageSet batch, by default not exceeding 1,000,000 bytes.
+		"queue.buffering.max.ms":       5,          //The delay before transmitting message batches (MessageSets) to the Broker to buffer messages, 5 ms by default.
+		"queue.buffering.max.messages": 100000,     //The total number of messages buffered by the Producer should not exceed 100,000.
+		"queue.buffering.max.kbytes":   1048576,    //MessageSets for the Producer buffering messages.
+		"message.send.max.retries":     2147483647, //Number of retries, 2,147,483,647 by default.
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
