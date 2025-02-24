@@ -105,7 +105,7 @@ func (p *Producer) produceJsonData(topic string, key int64, value interface{}) e
 }
 
 func (p *Producer) ProduceJsonTrade(productId string, data *model.TradeJson) error {
-	topic := fmt.Sprintf("stock.%s.t", productId)
+	topic := fmt.Sprintf("stock.%s.usa.t", productId)
 	return p.produceJsonData(topic, data.Timestamp, data)
 }
 
