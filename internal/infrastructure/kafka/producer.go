@@ -76,7 +76,7 @@ func (p *Producer) produceProtobufData(topic string, key string, value proto.Mes
 }
 
 func (p *Producer) ProduceProtobufTrade(productId string, platform string, market string, data *model.TradeProtobuf) error {
-	topic := fmt.Sprintf("%s.%s.t", platform, market)
+	topic := fmt.Sprintf("%s.%s.usa.t", platform, market)
 	return p.produceProtobufData(topic, productId, data)
 }
 
