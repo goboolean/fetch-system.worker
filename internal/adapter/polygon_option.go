@@ -9,7 +9,6 @@ import (
 	"github.com/Goboolean/fetch-system.worker/internal/infrastructure/polygon"
 )
 
-
 type OptionPolygonAdapter struct {
 	c *polygon.OptionClient
 }
@@ -21,7 +20,7 @@ func NewOptionPolygonAdapter(c *polygon.OptionClient) (out.DataFetcher, error) {
 }
 
 func (a *OptionPolygonAdapter) InputStream(ctx context.Context, symbol ...string) (<-chan *vo.Trade, error) {
-	
+
 	ch := make(chan *vo.Trade)
 
 	polyonCh, err := a.c.Subscribe()
@@ -34,9 +33,9 @@ func (a *OptionPolygonAdapter) InputStream(ctx context.Context, symbol ...string
 			ch <- &vo.Trade{
 				Symbol: v.Symbol,
 				TradeDetail: vo.TradeDetail{
-					Price: v.Price,
-					Size: v.Size,
-					Timestamp: time.Unix(v.Timestamp / 1000, v.Timestamp % 1000 * 1000000),
+					Price:     v.Price,
+					Size:      v.Size,
+					Timestamp: time.Unix(v.Timestamp/1000, v.Timestamp%1000*1000000),
 				},
 			}
 		}
